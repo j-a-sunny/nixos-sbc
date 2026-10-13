@@ -1,5 +1,6 @@
 {
   buildSBCUBoot,
+  armTrustedFirmwareAllwinnerH6,
   lib,
   linuxKernel,
   linux_6_16,
@@ -10,14 +11,20 @@ let
 in
 rec {
   ubootTanixTx6 = buildSBCUBoot {
-    defconfig = "sun50i_h6_defconfig";
+    defconfig = "orangepi_3_defconfig";
     extraMeta.platforms = [ "aarch64-linux" ];
+    buildInputs = [ armTrustedFirmwareAllwinnerH6 ];
+    BL31 = "${armTrustedFirmwareAllwinnerH6}/bl31.bin";
     extraConfig = ''
-      CONFIG_DEFAULT_DEVICE_TREE="allwinner/sun50i-h6-tanix-tx6"
+      CONFIG_DEFAULT_DEVICE_TREE="sun50i-h6-tanix-tx6"
+      CONFIG_OF_LIST="sun50i-h6-tanix-tx6"
       CONFIG_ENV_IS_NOWHERE=y
       CONFIG_SYS_BOOTM_LEN=0x6000000
     '';
     inherit version;
+    postPatch = ''
+      cp ${../pine64rock64/mmcboot.dtsi} arch/arm/dts/nixos-mmcboot.dtsi
+    '';
     filesToInstall = [
       "u-boot.itb"
       "spl/sunxi-spl.bin"
