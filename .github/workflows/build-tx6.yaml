@@ -1,0 +1,65 @@
+name: Build Tanix TX6
+
+# Manual only. Builds natively on GitHub's free arm64 runners (public repos),
+# so there is no cross-compiling or QEMU involved.
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'What to build'
+        required: true
+        default: 'image'
+        type: choice
+        options:
+          - uboot
+          - kernel
+          - image
+
+jobs:
+  build:
+    name: Build ${{ inputs.target }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      # The runner disk is small; kernel build + Nix store needs the space.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /opt/hostedtoolcache /usr/share/dotnet /usr/local/share/boost /usr/local/lib/android /opt/ghc || true
+          df -h /
+
+      - uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Cachix (optional)
+        if: ${{ vars.CACHIX_REPO != '' }}
+        uses: cachix/cachix-action@v15
+        with:
+          name: ${{ vars.CACHIX_REPO }}
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Build U-Boot
+        if: ${{ inputs.target == 'uboot' || inputs.target == 'image' }}
+        run: nix build -L .#packages.aarch64-linux.ubootTanixTx6 -o result-uboot
+
+      - name: Build kernel
+        if: ${{ inputs.target == 'kernel' || inputs.target == 'image' }}
+        run: nix build -L --keep-going .#nixosConfigurations.tanix-tx6.config.boot.kernelPackages.kernel -o result-kernel
+
+      - name: Build SD image
+        if: ${{ inputs.target == 'image' }}
+        run: nix build -L .#nixosConfigurations.tanix-tx6.config.system.build.sdImage -o result-image
+
+      - name: Collect output
+        run: |
+          mkdir -p out
+          [ -e result-uboot ] && cp -L result-uboot/u-boot-sunxi-with-spl.bin out/ || true
+          [ -e result-image ] && cp -L result-image/sd-image/*.zst out/ || true
+          ls -lh out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tanix-tx6-${{ inputs.target }}
+          path: out/
+          retention-days: 7
+          if-no-files-found: ignore

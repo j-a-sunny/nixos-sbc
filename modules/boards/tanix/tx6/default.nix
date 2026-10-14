@@ -14,6 +14,13 @@
 
     boot.kernelPackages = lib.mkDefault sbcPkgs.linuxPackages_latest_tanixTx6;
 
+    # Ethernet goes through the AC200 co-packaged PHY (built as modules).
+    boot.kernelModules = [
+      "ac200"
+      "ac200_phy"
+      "ac200_ephy_ctl"
+    ];
+
     hardware.deviceTree.filter = "sun50i-h6-tanix-tx6.dtb";
     hardware.enableRedistributableFirmware = true;
 

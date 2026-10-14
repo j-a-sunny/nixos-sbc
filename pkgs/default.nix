@@ -27,5 +27,5 @@ in
   inherit (pine64rock64) ubootRock64 ubootRock64v2;
   inherit (raspberrypi) ubootRaspberryPi4 raspberryPiFirmware;
   inherit (orangepi5) ubootOrangePi5 ubootOrangePi5b;
-  inherit (tanixTx6) linuxPackages_latest_tanixTx6 linuxPackages_6_16_tanixTx6 ubootTanixTx6;
+  inherit (tanixTx6) linuxPackages_latest_tanixTx6 linuxPackages_6_12_tanixTx6 ubootTanixTx6;
 }
