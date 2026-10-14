@@ -50,6 +50,13 @@ rec {
         # Provides clk_hw_register_regmap_gate() and the regmap.h include in clk-provider.h,
         # which the AC200 EPHY control driver needs.
         (armbianPatch "clk-gate-add-support-for-regmap-based-gates" "sha256-CcI0LRJq5q1l9F1i7L0how8oP9Tmm3Z75w0pq2TlD3k=")
+        # The patch above changes __devm_clk_hw_register_gate()'s signature but misses the
+        # devm_clk_hw_register_gate_parent_data() macro, which breaks drivers/clk/imx in a
+        # full (non-Armbian) kernel config.
+        {
+          name = "clk-provider-fix-devm-gate-parent-data";
+          patch = ./0002-clk-provider-fix-devm-gate-parent-data.patch;
+        }
         (armbianPatch "mfd-Add-support-for-X-Powers-AC200" "sha256-bJRgUSrV24POffKShSIvqzZrx/0Q4YK3JoekHDyQxKo=")
         (armbianPatch "mfd-Add-support-for-X-Powers-AC200-EPHY-syscon" "sha256-fm7EbZ0ChGAyUpSw+hCKnjOU86sbVELioT/2ciHR8Js=")
         (armbianPatch "net-phy-Add-support-for-AC200-EPHY" "sha256-59u+pZoZe1rMwZlO4FJZUdqN/scBsUxdAqHQWzHFkG0=")

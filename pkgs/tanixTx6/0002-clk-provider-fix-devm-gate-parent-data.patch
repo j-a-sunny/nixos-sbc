@@ -1,0 +1,15 @@
+diff --git a/include/linux/clk-provider.h b/include/linux/clk-provider.h
+index 6c457b4a..e1752de0 100644
+--- a/include/linux/clk-provider.h
++++ b/include/linux/clk-provider.h
+@@ -666,8 +666,8 @@ struct clk *clk_register_regmap_gate(struct device *dev, const char *name,
+ 					      reg, bit_idx, clk_gate_flags,   \
+ 					      lock)			      \
+ 	__devm_clk_hw_register_gate((dev), NULL, (name), NULL, NULL,	      \
+-				    (parent_data), (flags), (reg), (bit_idx), \
+-				    (clk_gate_flags), (lock))
++				    (parent_data), (flags), NULL, 0, (reg),   \
++				    (bit_idx), (clk_gate_flags), (lock))
+ 
+ void clk_unregister_gate(struct clk *clk);
+ void clk_hw_unregister_gate(struct clk_hw *hw);
