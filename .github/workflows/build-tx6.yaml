@@ -15,6 +15,9 @@ on:
           - kernel
           - image
 
+permissions:
+  contents: write # needed to create releases
+
 jobs:
   build:
     name: Build ${{ inputs.target }}
@@ -56,6 +59,22 @@ jobs:
           [ -e result-uboot ] && cp -L result-uboot/u-boot-sunxi-with-spl.bin out/ || true
           [ -e result-image ] && cp -L result-image/sd-image/*.zst out/ || true
           ls -lh out
+
+      # Every image build is published as a GitHub release with the image,
+      # the standalone U-Boot, and checksums.
+      - name: Create release
+        if: ${{ inputs.target == 'image' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd out
+          sha256sum * > SHA256SUMS
+          tag="tx6-$(date -u +%Y%m%d-%H%M)-${GITHUB_SHA::7}"
+          gh release create "$tag" ./* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Tanix TX6 image $tag" \
+            --notes "NixOS SD image for the Tanix TX6, built from commit ${GITHUB_SHA::7}. Flash with: zstdcat <image>.raw.zst | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync. The SPL is already in the image. First login: root / SBCDefaultBootstrapPassword."
 
       - uses: actions/upload-artifact@v4
         with:
