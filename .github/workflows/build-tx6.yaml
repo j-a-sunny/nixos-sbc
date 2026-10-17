@@ -13,7 +13,13 @@ on:
         options:
           - uboot
           - kernel
+          - system-kernel
           - image
+      nixpkgs_url:
+        description: 'system-kernel only: your running system''s nixpkgs URL (from its flake.lock)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write # needed to create releases
@@ -48,6 +54,17 @@ jobs:
       - name: Build kernel
         if: ${{ inputs.target == 'kernel' || inputs.target == 'image' }}
         run: nix build -L --keep-going .#nixosConfigurations.tanix-tx6.config.boot.kernelPackages.kernel -o result-kernel
+
+      # Builds the kernel against the nixpkgs of an existing system (e.g. the TX6's own
+      # flake) so the result is the exact same derivation that system evaluates and it
+      # can be downloaded from the cache instead of compiled on the board.
+      - name: Build kernel for an existing system
+        if: ${{ inputs.target == 'system-kernel' }}
+        run: |
+          test -n "${{ inputs.nixpkgs_url }}" || { echo "nixpkgs_url is required for system-kernel"; exit 1; }
+          nix build -L --keep-going \
+            --override-input nixpkgs "${{ inputs.nixpkgs_url }}" \
+            '.#packages.aarch64-linux.linuxPackages_latest_tanixTx6.kernel^*' -o result-system-kernel
 
       - name: Build SD image
         if: ${{ inputs.target == 'image' }}
